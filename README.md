@@ -68,6 +68,18 @@ curl "http://localhost:8080/lookup?x=-78.40&y=39.69"
 
 Use "name" as your property.
 
+```
+./spatial_lookup geojson.json name
+```
+
+There two polygons surrounding the cell at 0,0.
+
+```
+curl http://localhost:8080/lookup?x=0.5&y=0.5
+```
+
+Example data for `geojson.json` file.
+
 ```json
 { "type": "FeatureCollection",
   "features": [
