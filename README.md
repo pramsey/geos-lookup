@@ -1,4 +1,4 @@
-# SpatialLookup Web Service
+# Spatial Lookup Web Service
 
 This [GEOS](https://libgeos.org) example program demonstrates the use of the STRtree index and PreparedGeometry to create a high-performance in-memory reverse geocoder.
 
