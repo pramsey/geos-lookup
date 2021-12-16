@@ -12,13 +12,6 @@
  * SpatialLookup::LookupEntry
  */
 
-SpatialLookup::LookupEntry::LookupEntry(
-    const Geometry* geom,
-    const GeoJSONFeature& feature)
-    : m_prepgeom(PreparedGeometryFactory::prepare(geom))
-    , m_feature(feature)
-    {};
-
 const Envelope*
 SpatialLookup::LookupEntry::getEnvelopeInternal() const
 {
@@ -49,45 +42,43 @@ SpatialLookup::readGeoJsonFile()
 {
     // Load the filename into an in-memory string
     std::ifstream ifs(m_filename);
+
+    // File is not readable / does not exist
+    if(!ifs) {
+        std::cerr << "spatial_lookup: unable to load file '" << m_filename << "'" << std::endl;
+        return false;
+    }
+
     std::string content((std::istreambuf_iterator<char>(ifs) ),
                         (std::istreambuf_iterator<char>()    ));
 
-    // Parse the GeoJSON string into a feature collection
-    GeoJSONReader reader;
-    GeoJSONFeatureCollection fc = reader.readFeatures(content);
+    try {
+        // Parse the GeoJSON string into a feature collection
+        GeoJSONReader reader;
+        GeoJSONFeatureCollection fc = reader.readFeatures(content);
 
-    // Just stop if there are no features
-    if (fc.getFeatures().empty()) {
-        return false;
-    }
-
-    // We can't easily hold a reference to the collection
-    // so we copy out what we care about, the vector of features
-    for (auto& feature: fc.getFeatures()) {
-        m_features.emplace_back(feature);
-    }
-
-    return true;
-}
-
-
-bool
-SpatialLookup::prepareGeometries()
-{
-    // No input, nothing we can do
-    std::size_t num_features = m_features.size();
-    if (num_features == 0)
-        return false;
-
-    // Only prepare polygons, ignore everything else
-    for (std::size_t i = 0; i < num_features; ++i) {
-        auto& feature = m_features[i];
-        const Geometry* geom = feature.getGeometry();
-        if (geom->isPolygonal()) {
-            // Add LookupEntry(geom, feature) into the vector
-            m_lookups.emplace_back(geom, feature);
+        // Just stop if there are no features
+        if (fc.getFeatures().empty()) {
+            std::cerr << "spatial_lookup: no features in file '" << m_filename << "'" << std::endl;
+            return false;
         }
+
+        // We can't easily hold a reference to the collection
+        // so we copy out what we care about, the vector of features
+        for (auto& feature: fc.getFeatures()) {
+            const Geometry* geom = feature.getGeometry();
+            if (geom && geom->isPolygonal()) {
+                m_lookups.emplace_back(feature);
+            }
+        }        
     }
+    catch (std::exception& e) {
+        std::string what(e.what());
+        std::cerr << "spatial_lookup: failed to parse file '" << m_filename << "'" << std::endl;
+        std::cerr << "spatial_lookup: " << what << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -98,7 +89,8 @@ SpatialLookup::createIndex()
     // Set up a new empty spatial index. Pre-reserving the 
     // size will make building a tiny bit faster.
     m_index.reset(new TemplateSTRtree<LookupEntry*, EnvelopeTraits>(m_lookups.size()));
-    // Populate the index the LookupEntry objects. Because
+
+    // Populate the index with LookupEntry* pointers. Because
     // they have a getEnvelopeInternal() method, the index 
     // can handle them directly.
     for (auto& entry: m_lookups) {
@@ -186,6 +178,10 @@ main(int argc, char* argv[])
 
     // Load the file and build the indexes
     SpatialLookup splu(argv[1], argv[2]);
+    if (!splu.ready()) {
+        std::cerr << "spatial_lookup: data load failed" << std::endl;
+        return 1;
+    }
     std::cerr << "spatial_lookup: loaded and indexed " << argv[1] << std::endl;
 
     // Set up HTTP end point, read the 'x' and 'y' HTTP request

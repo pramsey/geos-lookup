@@ -75,7 +75,10 @@ public:
     public:
 
         // Constructor
-        LookupEntry(const Geometry* geom, const GeoJSONFeature& feature);
+        LookupEntry(const GeoJSONFeature& feature)
+            : m_feature(feature) // take a copy of feature first, then use it next
+            , m_prepgeom(PreparedGeometryFactory::prepare(m_feature.getGeometry()))
+            {};
 
         /**
          * Return the Envelope of the geometry that was used to
@@ -90,8 +93,8 @@ public:
     private:
 
         // Members
+        GeoJSONFeature m_feature;
         std::unique_ptr<PreparedGeometry> m_prepgeom;
-        const GeoJSONFeature& m_feature;
 
     };
 
@@ -108,7 +111,7 @@ public:
         , m_index(nullptr)
         , m_dataready(false)
     {
-        m_dataready = readGeoJsonFile() && prepareGeometries() && createIndex();
+        m_dataready = readGeoJsonFile() && createIndex();
     }
 
     /**
@@ -116,20 +119,21 @@ public:
      * return a list of values for the property of interest.
      */
     std::vector<std::string> lookup(const Coordinate& coord) const;
+    bool ready(void) const {
+        return m_dataready;
+    }
 
 private:
 
     // Members
     const std::string m_filename;
     const std::string m_property;
-    std::vector<GeoJSONFeature> m_features;
     std::unique_ptr<TemplateSTRtree<LookupEntry*, EnvelopeTraits>> m_index;
     std::vector<LookupEntry> m_lookups;
     bool m_dataready;
 
     // Methods
     bool readGeoJsonFile();
-    bool prepareGeometries();
     bool createIndex();
 
 };
