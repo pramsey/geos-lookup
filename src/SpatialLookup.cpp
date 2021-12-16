@@ -144,7 +144,7 @@ SpatialLookup::lookup(const Coordinate& coord) const
  * HTTP library is from 
  * https://github.com/yhirose/cpp-httplib 
  */
-#include "httplib.h"
+#include "vend/httplib.h"
 using namespace httplib;
 
 /**
