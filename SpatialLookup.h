@@ -1,16 +1,9 @@
-/**********************************************************************
- *
- * GEOS Spatial Lookup
- * http://github.com/pramsey/geos-lookup
- *
- * Copyright (C) 2021 Paul Ramsey <pramsey@cleverelephant.ca>
- *
- * This is free software; you can redistribute and/or modify it under
- * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation.
- * See the COPYING file for more information.
- *
- **********************************************************************/
+/*
+*  SpatialLookup.cpp
+*
+*  Copyright (c) 2021 Paul Ramsey. All rights reserved.
+*  MIT License
+*/
 
 #pragma once
 

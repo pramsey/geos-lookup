@@ -1,3 +1,9 @@
+/*
+*  SpatialLookup.cpp
+*
+*  Copyright (c) 2021 Paul Ramsey. All rights reserved.
+*  MIT License
+*/
 
 // App headers
 #include "SpatialLookup.h"
